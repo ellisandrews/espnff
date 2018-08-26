@@ -1,5 +1,5 @@
 class Team(object):
-    '''Teams are part of the league'''
+    """Teams are part of the league"""
     def __init__(self, data):
         self.team_id = data['teamId']
         self.team_abbrev = data['teamAbbrev']
@@ -10,8 +10,7 @@ class Team(object):
         self.losses = data['record']['overallLosses']
         self.points_for = data['record']['pointsFor']
         self.points_against = data['record']['pointsAgainst']
-        self.owner = "%s %s" % (data['owners'][0]['firstName'],
-                                data['owners'][0]['lastName'])
+        self.owner = "%s %s" % (data['owners'][0].get('firstName'), data['owners'][0].get('lastName'))
         self.schedule = []
         self.scores = []
         self.mov = []
@@ -21,7 +20,7 @@ class Team(object):
         return 'Team(%s)' % (self.team_name, )
 
     def _fetch_schedule(self, data):
-        '''Fetch schedule and scores for team'''
+        """Fetch schedule and scores for team"""
         matchups = data['scheduleItems']
 
         for matchup in matchups:
@@ -40,6 +39,6 @@ class Team(object):
             self.schedule.append(opponentId)
 
     def get_roster(self, week):
-        '''Get roster for a given week'''
+        """Get roster for a given week"""
         roster = None
         return roster
