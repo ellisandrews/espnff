@@ -11,18 +11,18 @@ from .exception import (PrivateLeagueException,
 
 
 class League(object):
-    '''Creates a League instance for ESPN league'''
+    """Creates a League instance for ESPN league"""
     def __init__(self, league_id, year, espn_s2=None, swid=None):
         self.league_id = league_id
         self.year = year
-        self.ENDPOINT = "http://games.espn.com/ffl/api/v2/"
+        self.ENDPOINT = 'http://games.espn.com/ffl/api/v2/'
         self.teams = []
         self.espn_s2 = espn_s2
         self.swid = swid
         self._fetch_league()
 
     def __repr__(self):
-        return 'League(%s, %s)' % (self.league_id, self.year, )
+        return "League({}, {})".format(self.league_id, self.year)
 
     def _fetch_league(self):
         params = {
@@ -30,6 +30,7 @@ class League(object):
             'seasonId': self.year
         }
 
+        # These are required for a private league
         cookies = None
         if self.espn_s2 and self.swid:
             cookies = {
@@ -37,24 +38,24 @@ class League(object):
                 'SWID': self.swid
             }
 
-        r = requests.get('%sleagueSettings' % (self.ENDPOINT, ), params=params, cookies=cookies)
-        self.status = r.status_code
+        r = requests.get('{}leagueSettings'.format(self.ENDPOINT), params=params, cookies=cookies)
+        status = r.status_code
         data = r.json()
 
-        if self.status == 401:
+        if status == 401:
             raise PrivateLeagueException(data['error'][0]['message'])
 
-        elif self.status == 404:
+        elif status == 404:
             raise InvalidLeagueException(data['error'][0]['message'])
 
-        elif self.status != 200:
-            raise UnknownLeagueException('Unknown %s Error' % self.status)
+        elif status != 200:
+            raise UnknownLeagueException("Unknown error (status_code={})".format(status))
 
         self._fetch_teams(data)
         self._fetch_settings(data)
 
     def _fetch_teams(self, data):
-        '''Fetch teams in league'''
+        """Fetch teams in league"""
         teams = data['leaguesettings']['teams']
 
         for team in teams:
@@ -80,7 +81,7 @@ class League(object):
         self.settings = Settings(data)
 
     def power_rankings(self, week):
-        '''Return power rankings for any week'''
+        """Return power rankings for any week"""
 
         # calculate win for every week
         win_matrix = []
@@ -99,7 +100,7 @@ class League(object):
         return power_rank
 
     def scoreboard(self, week=None):
-        '''Returns list of matchups for a given week'''
+        """Returns list of matchups for a given week"""
         params = {
             'leagueId': self.league_id,
             'seasonId': self.year
@@ -108,17 +109,17 @@ class League(object):
             params['matchupPeriodId'] = week
 
         r = requests.get('%sscoreboard' % (self.ENDPOINT, ), params=params)
-        self.status = r.status_code
+        status = r.status_code
         data = r.json()
 
-        if self.status == 401:
+        if status == 401:
             raise PrivateLeagueException(data['error'][0]['message'])
 
-        elif self.status == 404:
+        elif status == 404:
             raise InvalidLeagueException(data['error'][0]['message'])
 
-        elif self.status != 200:
-            raise UnknownLeagueException('Unknown %s Error' % self.status)
+        elif status != 200:
+            raise UnknownLeagueException("Unknown error (status_code={})".format(status))
 
         matchups = data['scoreboard']['matchups']
         result = [Matchup(matchup) for matchup in matchups]
